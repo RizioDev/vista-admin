@@ -52,6 +52,20 @@ try {
     setLoading(false);
   };
 
+  const bajaSocio = async (socioId) => {
+    try {
+const { data, error } = await supabase
+.from('socios')
+.update({ estado: false })
+.eq('id', socioId)
+.select()
+        
+    } catch (error) {
+      console.log('error al dar de baja', error);
+    }
+        
+  }
+
   useEffect(() => {
     fetchSocios();
     fetchSocioActividades();
@@ -77,13 +91,12 @@ try {
     return actividadesDeSocio.filter((nombre) => nombre !== null).join(', ')
   };
 
-const getPagosSocios = (socioId) => {
-  const pagosDelSocio = pagos.filter((p) => p.id_socio === socioId)
-  .map((rel) => {
-    return rel.fecha_pago
-  })
-  return pagosDelSocio
-}
+  const getPagosSocios = (socioId) => {
+    const FechaDePagosDelSocio = pagos.filter((p) => p.id_socio === socioId)
+      .map((rel) => rel.fecha_pago);
+  
+    return FechaDePagosDelSocio.length > 0 ? FechaDePagosDelSocio.join(', ') : "No hay pago";
+  };
 
   return (
     <div>
@@ -124,8 +137,8 @@ const getPagosSocios = (socioId) => {
                 >
                   Editar
                 </Button>
-                <Button variant="danger" onClick={() => onDelete(socio.id)}>
-                  Eliminar
+                <Button variant="danger" onClick={() => bajaSocio(socio.id)}>
+                  Dar de baja
                 </Button>
               </td>
             </tr>

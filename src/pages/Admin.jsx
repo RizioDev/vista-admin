@@ -3,6 +3,7 @@ import { Container, Button, Modal } from 'react-bootstrap';
 import SociosList from '../components/SociosList';
 import EditSocioForm from '../components/EditSocioForm';
 import SocioDetail from '../components/SocioDetail';
+import { supabase } from '../config/supabaseConfig';
 
 const Admin = () => {
   const [socios, setSocios] = useState([]);
@@ -26,8 +27,16 @@ const Admin = () => {
     localStorage.setItem('socios', JSON.stringify(newSocios));
   };
 
-  const confirmDeleteSocio = (id) => {
-    setSocioToDelete(id);
+
+  const confirmDeleteSocio = async (id) => {
+  try {
+    const { error } = await supabase
+.from('socios')
+.delete()
+.eq('id', id)
+  } catch (error) {
+    console.log('hubo error al eliminar', error);
+  }
     setShowDeleteModal(true);
   };
 
