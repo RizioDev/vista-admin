@@ -40,13 +40,6 @@ const Admin = () => {
     setShowDeleteModal(true);
   };
 
-  const deleteSocio = () => {
-    const newSocios = socios.filter((socio) => socio.id !== socioToDelete);
-    setSocios(newSocios);
-    localStorage.setItem('socios', JSON.stringify(newSocios));
-    setShowDeleteModal(false);
-  };
-
   const confirmEditSocio = (socio) => {
     setSocioToEdit(socio);
     setShowEditModal(true);
@@ -56,8 +49,8 @@ const Admin = () => {
     const newSocios = socios.map((socio) =>
       socio.id === editedSocio.id ? editedSocio : socio
     );
+    console.log('editado', newSocios);
     setSocios(newSocios);
-    localStorage.setItem('socios', JSON.stringify(newSocios));
     setShowEditModal(false);
   };
 
@@ -71,21 +64,7 @@ const Admin = () => {
       <h1>Administrar Socios</h1>
       <SociosList socios={socios} onDelete={confirmDeleteSocio} onEdit={confirmEditSocio} onView={viewSocio} />
       
-      {/* Modal para confirmar eliminación */}
-      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Confirmar eliminación</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>¿Está seguro que desea eliminar este socio?</Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-            Cancelar
-          </Button>
-          <Button variant="danger" onClick={deleteSocio}>
-            Eliminar
-          </Button>
-        </Modal.Footer>
-      </Modal>
+
       
       {/* Modal para editar socio */}
       <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>

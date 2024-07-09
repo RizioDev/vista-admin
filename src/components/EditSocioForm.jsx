@@ -1,100 +1,51 @@
-// src/components/EditSocioForm.jsx
 import React, { useState, useEffect } from "react";
 import { Form, Button } from "react-bootstrap";
-import { supabase } from "../config/supabaseConfig";
+import useSocios from "../hooks/useSocios";
+import {updateSocio } from "../services/sociosServices";
 
 const EditSocioForm = ({ socio, onSave }) => {
-  const [nombre, setNombre] = useState("");
-  const [apellido, setApellido] = useState("");
-  const [actividad, setActividad] = useState([]);
-  const [actividades, setActividades] = useState([]);
-  const [fechaNacimiento, setFechaNacimiento] = useState("");
-  const [direccion, setDireccion] = useState("");
-  const [telefono, setTelefono] = useState("");
-  const [email, setEmail] = useState("");
-  const [dni, setDni] = useState("");
+  const { loading, error, obtenerActividadesDirectamente } = useSocios();
+  const [nombre, setNombre] = useState(socio.nombre);
+  const [apellido, setApellido] = useState(socio.apellido);
+  const [dni, setDni] = useState(socio.dni);
+  const [fechaNacimiento, setFechaNacimiento] = useState(socio.fechaNacimiento);
+  const [direccion, setDireccion] = useState(socio.direccion);
+  const [telefono, setTelefono] = useState(socio.telefono);
+  const [email, setEmail] = useState(socio.email);
   const [actividadId, setActividadId] = useState("");
 
-  const fetchActividades = async () => {
-    try {
-      const { data, error } = await supabase.from("actividades").select("*");
-      if (error) {
-        throw error;
-      }
-      setActividades(data);
-    } catch (error) {
-      console.error("Error al obtener las actividades:", error);
-    }
-  };
-
-  const darDeAlta = async (socioId) => {
-    try {
-      const { data, error } = await supabase
-        .from("socios")
-        .update({ estado: true })
-        .eq('id', socioId);
-      if (error) throw error;
-      onSave(data);
-    } catch (error) {
-      console.log('Error al dar de alta al socio', error);
-    }
-  };
-
-  const updateSocio = async (socioId) => {
-    const { data, error } = await supabase
-      .from("socios")
-      .update({ nombre, apellido, actividad, fecha_nacimiento: fechaNacimiento, direccion, telefono, email, dni })
-      .eq('id', socioId)
-      // .eq("some_column", "someValue")
-      .select();
-  };
-
   useEffect(() => {
-    fetchActividades();
+    obtenerActividadesDirectamente();
   }, []);
 
-  useEffect(() => {
-    if (socio) {
-      setActividad(socio.actividad);
-      setNombre(socio.nombre);
-      setApellido(socio.apellido);
-      setActividad(socio.actividad);
-      setFechaNacimiento(socio.fecha_nacimiento);
-      setDireccion(socio.direccion);
-      setTelefono(socio.telefono);
-      setEmail(socio.email);
-      setDni(socio.dni);
-    }
-    fetchActividades();
-  }, [socio]);
+  console.log('soysocio', socio.id);
 
   const handleSubmit = async (e) => {
+    e.preventDefault();
+    const updatedSocio = {
+      nombre,
+      apellido,
+      dni,
+      fechaNacimiento,
+      direccion,
+      telefono,
+      email,
+    };
     try {
-      e.preventDefault();
-      await updateSocio(socio.id)
+      await updateSocio(socio.id, updatedSocio);
+      onSave(socio.id);
     } catch (error) {
-      console.log('error al updatear', error);
+      console.log("Error al actualizar el socio:", error);
     }
   };
+
+ 
+
+  if (loading) return <p>Cargando...</p>;
+  if (error) return <p>Error: {error.message}</p>;
 
   return (
     <Form onSubmit={handleSubmit}>
-      <Form.Group controlId="formActividad">
-        <Form.Label>Actividad</Form.Label>
-        <Form.Control
-          as="select"
-          value={actividadId}
-          onChange={(e) => setActividadId(e.target.value)}
-        >
-          <option value="">Seleccione una actividad</option>
-          {/* Aquí deberías mapear las actividades desde tu base de datos */}
-          {actividades.map((actividad) => (
-            <option key={actividad.id} value={actividad.id}>
-              {actividad.nombre}
-            </option>
-          ))}
-        </Form.Control>
-      </Form.Group>
       <Form.Group controlId="formNombre">
         <Form.Label>Nombre</Form.Label>
         <Form.Control
@@ -119,12 +70,11 @@ const EditSocioForm = ({ socio, onSave }) => {
           type="text"
           value={dni}
           onChange={(e) => setDni(e.target.value)}
-          placeholder="Ingrese el numero de DNI"
+          placeholder="Ingrese el número de DNI"
         />
       </Form.Group>
-
       <Form.Group controlId="formNacimiento">
-        <Form.Label>fechaNacimiento</Form.Label>
+        <Form.Label>Fecha de Nacimiento</Form.Label>
         <Form.Control
           type="date"
           value={fechaNacimiento}
@@ -133,39 +83,36 @@ const EditSocioForm = ({ socio, onSave }) => {
         />
       </Form.Group>
       <Form.Group controlId="formDireccion">
-        <Form.Label>Direccion</Form.Label>
+        <Form.Label>Dirección</Form.Label>
         <Form.Control
           type="text"
           value={direccion}
           onChange={(e) => setDireccion(e.target.value)}
-          placeholder="Ingrese la direccion"
+          placeholder="Ingrese la dirección"
         />
       </Form.Group>
       <Form.Group controlId="formTelefono">
-        <Form.Label>Telefono</Form.Label>
+        <Form.Label>Teléfono</Form.Label>
         <Form.Control
           type="text"
           value={telefono}
           onChange={(e) => setTelefono(e.target.value)}
-          placeholder="Ingrese el numero de telefono"
+          placeholder="Ingrese el número de teléfono"
         />
       </Form.Group>
-      <Form.Group controlId="formDireccion">
+      <Form.Group controlId="formEmail">
         <Form.Label>Email</Form.Label>
         <Form.Control
-          type="text"
+          type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Ingrese el email"
         />
       </Form.Group>
-      <Form.Group controlId="formDireccion">
-        <Form.Label>Dar de alta</Form.Label>
-    <Button variant="secondary" color="red" onClick={darDeAlta}>Dar alta</Button>
-      </Form.Group>
       <Button variant="primary" type="submit" className="mt-3">
-        Agregar
+        Guardar
       </Button>
+
     </Form>
   );
 };
