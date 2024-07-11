@@ -1,11 +1,11 @@
 // src/components/SociosList.jsx
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Table, Button } from "react-bootstrap";
 import useSocios from "../hooks/useSocios";
 import { bajaSocio } from "../services/sociosServices";
 
 const SociosList = ({ onDelete, onEdit, onView }) => {
-  const { socios, loading, error, getActividadesDeSocio, getPagosSocios } = useSocios();
+  const { socios, loading, error, getActividadesDeSocio, getPagosSocios, nextPage, prevPage, page } = useSocios();
 
   if (loading) return <p>Cargando...</p>;
   if (error) return <p>Error: {error.message}</p>;
@@ -50,13 +50,17 @@ const SociosList = ({ onDelete, onEdit, onView }) => {
                   Editar
                 </Button>
                 <Button variant={socio.estado ? 'danger' : 'success'} onClick={() => bajaSocio(socio.id)}>
-  {socio.estado ? 'Dar de baja' : 'Dar de alta'}
-</Button>
+                  {socio.estado ? 'Dar de baja' : 'Dar de alta'}
+                </Button>
               </td>
             </tr>
           ))}
         </tbody>
       </Table>
+      <div className="d-flex justify-content-between">
+        <Button onClick={prevPage} disabled={page === 0}>Anterior</Button>
+        <Button onClick={nextPage} disabled={socios.length < 2}>Siguiente</Button>
+      </div>
     </div>
   );
 };

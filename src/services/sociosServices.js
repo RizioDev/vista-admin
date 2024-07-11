@@ -1,9 +1,9 @@
 import { supabase } from '../config/supabaseConfig';
 
 // Obtener socios
-export const obtenerSocios = async () => {
+export const obtenerSocios = async (from, to) => {
   try {
-    let { data, error } = await supabase.from("socios").select("*");
+    let { data, error } = await supabase.from("socios").select("*").range(from, to);
     if (error) throw error;
     return data;
   } catch (error) {
