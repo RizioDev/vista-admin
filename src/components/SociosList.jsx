@@ -1,14 +1,55 @@
-// src/components/SociosList.jsx
-import React from "react";
-import { Table, Button } from "react-bootstrap";
+import React, { useEffect } from "react";
+import { Table, Button, Pagination } from "react-bootstrap";
 import useSocios from "../hooks/useSocios";
 import { bajaSocio } from "../services/sociosServices";
 
-const SociosList = ({ onDelete, onEdit, onView }) => {
-  const { socios, loading, error, getActividadesDeSocio, getPagosSocios, nextPage, prevPage, page } = useSocios();
 
+const SociosList = ({ onDelete, onEdit, onView,setSocios,renderTrigger }) => {
+  const { 
+    socios, 
+    loading, 
+    error, 
+    getActividadesDeSocio, 
+    getPagosSocios, 
+    nextPage, 
+    prevPage, 
+    page, 
+    totalPages,
+    goToPage
+  } = useSocios();
+  
+  useEffect(() => {
+    console.log('Socios updated:', socios);
+  }, [socios]);
+  
+  
   if (loading) return <p>Cargando...</p>;
   if (error) return <p>Error: {error.message}</p>;
+
+  
+
+  const handleEdit = (socio) => {
+    onEdit(socio);
+  };
+
+  const renderPagination = () => {
+    let items = [];
+    for (let number = 1; number <= totalPages; number++) {
+      items.push(
+        <Pagination.Item key={number} active={number === page} onClick={() => goToPage(number)}>
+          {number}
+        </Pagination.Item>,
+      );
+    }
+
+    return (
+      <Pagination>
+        <Pagination.Prev onClick={prevPage} disabled={page === 1} />
+        {items}
+        <Pagination.Next onClick={nextPage} disabled={page === totalPages} />
+      </Pagination>
+    );
+  };
 
   return (
     <div>
@@ -45,7 +86,7 @@ const SociosList = ({ onDelete, onEdit, onView }) => {
                 <Button
                   variant="warning"
                   className="me-2"
-                  onClick={() => onEdit(socio)}
+                  onClick={() => handleEdit(socio)}
                 >
                   Editar
                 </Button>
@@ -57,9 +98,8 @@ const SociosList = ({ onDelete, onEdit, onView }) => {
           ))}
         </tbody>
       </Table>
-      <div className="d-flex justify-content-between">
-        <Button onClick={prevPage} disabled={page === 0}>Anterior</Button>
-        <Button onClick={nextPage} disabled={socios.length < 2}>Siguiente</Button>
+      <div className="d-flex justify-content-center mt-3">
+        {renderPagination()}
       </div>
     </div>
   );

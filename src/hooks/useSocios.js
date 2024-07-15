@@ -15,13 +15,23 @@ const useSocios = () => {
   const [pagos, setPagos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [page, setPage] = useState(0);
-  const pageSize = 2; // Número de socios por página
+  const [totalPages, setTotalPages] = useState(0);
+  const [page, setPage] = useState(1);
+  const pageSize = 10; // Número de socios por página
 
   const fetchData = async () => {
     try {
-      const from = page * pageSize;
+      const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
+
+         // Obtener el total de socios para calcular el número total de páginas
+         const { count } = await supabase
+         .from('socios')
+         .select('*', { count: 'exact', head: true });
+
+         setTotalPages(Math.ceil(count / pageSize));
+
+
       const [sociosData, actividadesData, socioActividadesData, pagosData] = await Promise.all([
         obtenerSocios(from, to),
         obtenerActividades(),
@@ -39,21 +49,32 @@ const useSocios = () => {
     }
   };
 
+  const goToPage = (newPage) => {
+    setPage(newPage);
+  };
+
+
   useEffect(() => {
     fetchData();
 
     const subscription = supabase
-      .channel('custom-all-channel')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'socios' }, (payload) => {
+    .channel('custom-all-channel')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'socios' }, (payload) => {
+      if (payload.eventType === 'UPDATE') {
+        setSocios(prevSocios => prevSocios.map(s => 
+          s.id === payload.new.id ? { ...s, ...payload.new } : s
+        ));
+      } else {
         fetchData();
-        console.log('Change received!', payload);
-      })
-      .subscribe();
+      }
+      console.log('Cambios recibidos!', payload);
+    })
+    .subscribe();
 
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [page]);
+  return () => {
+    subscription.unsubscribe();
+  };
+}, [page]);
 
   const nextPage = () => setPage(page + 1);
   const prevPage = () => setPage(page - 1);
@@ -85,8 +106,7 @@ const useSocios = () => {
     return FechaDePagosDelSocio.length > 0 ? FechaDePagosDelSocio.join(", ") : "No hay pago";
   };
 
-  return { socios, loading, error, getActividadesDeSocio, getPagosSocios, obtenerActividadesDirectamente, nextPage, prevPage, page };
+  return { socios, loading, error, setSocios, getActividadesDeSocio, getPagosSocios, obtenerActividadesDirectamente, nextPage, prevPage, page, totalPages, goToPage };
 };
 
 export default useSocios;
-s

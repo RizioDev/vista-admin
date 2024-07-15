@@ -13,6 +13,13 @@ const Admin = () => {
   const [socioToDelete, setSocioToDelete] = useState(null);
   const [socioToEdit, setSocioToEdit] = useState(null);
   const [socioToView, setSocioToView] = useState(null);
+  const [renderTrigger, setRenderTrigger] = useState(0);
+  const [selectedSocio, setSelectedSocio] = useState(null);
+
+  const handleEdit = (socio) => {
+    setSelectedSocio(socio);
+    setShowEditModal(true);
+  };
 
   useEffect(() => {
     const savedSocios = localStorage.getItem('socios');
@@ -41,20 +48,24 @@ const Admin = () => {
   };
 
   const confirmEditSocio = (socio) => {
+    setSelectedSocio(socio)
     setSocioToEdit(socio);
     setShowEditModal(true);
   };
 
   const saveSocio = (editedSocio) => {
-    const newSocios = socios.map((socio) =>
+    console.log("saveSocio called with:", editedSocio);
+    setSocios(prevSocios => prevSocios.map(socio =>
       socio.id === editedSocio.id ? editedSocio : socio
-    );
-    console.log('editado', newSocios);
-    setSocios(newSocios);
+    ));
+    console.log(editedSocio, 'soy edited');
     setShowEditModal(false);
+    setRenderTrigger(prev => prev + 1);
   };
+  
 
   const viewSocio = (socio) => {
+
     setSocioToView(socio);
     setShowDetailModal(true);
   };
@@ -62,7 +73,7 @@ const Admin = () => {
   return (
     <Container>
       <h1>Administrar Socios</h1>
-      <SociosList socios={socios} onDelete={confirmDeleteSocio} onEdit={confirmEditSocio} onView={viewSocio} />
+      <SociosList socios={socios} onDelete={confirmDeleteSocio} onEdit={confirmEditSocio} onView={viewSocio} setSocios={setSocios} renderTrigger={renderTrigger} />
       
 
       
@@ -72,7 +83,7 @@ const Admin = () => {
           <Modal.Title>Editar Socio</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {socioToEdit && <EditSocioForm socio={socioToEdit} onSave={saveSocio} />}
+          {socioToEdit && <EditSocioForm socio={socioToEdit} onSave={saveSocio}  />}
         </Modal.Body>
       </Modal>
 

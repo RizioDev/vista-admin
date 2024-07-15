@@ -1,4 +1,3 @@
-// src/components/AddSocioForm.jsx
 import React, { useState, useEffect } from "react";
 import { Form, Button, Container } from "react-bootstrap";
 import { supabase } from "../config/supabaseConfig";
@@ -12,11 +11,11 @@ const AddSocioForm = ({ onAddSocio }) => {
   const [telefono, setTelefono] = useState("");
   const [email, setEmail] = useState("");
   const [dni, setDni] = useState("");
-  const [actividad, setActividad] = useState("");
-  const [actividades, setActividades] = useState([]);
   const [actividadId, setActividadId] = useState("");
+  const [montoPago, setMontoPago] = useState(3500); // Monto del pago
+  const [actividades, setActividades] = useState([]);
 
-  // traigo las actividades de la db
+  // Traer las actividades de la base de datos
   const fetchActividades = async () => {
     try {
       const { data, error } = await supabase.from("actividades").select("*");
@@ -33,7 +32,7 @@ const AddSocioForm = ({ onAddSocio }) => {
     fetchActividades();
   }, []);
 
-  //toast de que se creo bien el user
+  // Toast de que se creó bien el usuario
   const Toast = Swal.mixin({
     toast: true,
     position: "top-end",
@@ -45,10 +44,12 @@ const AddSocioForm = ({ onAddSocio }) => {
       toast.onmouseleave = Swal.resumeTimer;
     },
   });
-  //funcion de add socio
+
+  // Función de agregar socio
   const addSocio = async () => {
     try {
-      const { data, error } = await supabase
+      // Insertar el nuevo socio
+      const { data: socioData, error: socioError } = await supabase
         .from("socios")
         .insert([
           {
@@ -62,38 +63,56 @@ const AddSocioForm = ({ onAddSocio }) => {
           },
         ])
         .select();
-  
-      if (error) {
-        throw error;
+
+      if (socioError) {
+        throw socioError;
       }
-      
-      //guardo la id del socio creado
-      const nuevoSocioId = data[0].id;
-  
-      //si seleccione una actividad entonces la inserto
-      //en la tabla socio_actividad con la id del socio y la id de la actividad
+
+      // Obtener el ID del nuevo socio
+      const nuevoSocioId = socioData[0].id;
+
+      // Insertar el socio en la actividad seleccionada
       if (actividadId) {
-        const { data, error } = await supabase
-          .from('socio_actividad')
+        const { data: socioActividadData, error: socioActividadError } = await supabase
+          .from("socio_actividad")
           .insert([
             { id_socio: nuevoSocioId, id_actividad: actividadId },
           ])
           .select();
 
-        if (error) {
-          throw error;
+        if (socioActividadError) {
+          throw socioActividadError;
         }
       }
-     
+
+      // Insertar un pago para el nuevo socio
+      const { data, error } = await supabase
+        .from("pagos")
+        .insert([
+          {
+            id_socio: nuevoSocioId,
+            fecha_pago: new Date().toISOString(),
+            monto: montoPago,
+          
+          },
+        ])
+        .select();
+
+      if (error) {
+        throw error;
+      }
+
+      return socioData[0]; // Retorna el nuevo socio creado
+
     } catch (error) {
       console.error(error);
       Toast.fire({
         icon: "error",
         title: "Error al agregar el socio o la actividad",
       });
+      throw error; // Lanza el error para que sea manejado en el handleSubmit
     }
   };
-
 
   const handleSubmit = async (e) => {
     try {
@@ -103,16 +122,22 @@ const AddSocioForm = ({ onAddSocio }) => {
         icon: "success",
         title: "Usuario agregado correctamente!",
       });
+      // Limpiar los campos del formulario
       setNombre("");
       setApellido("");
       setDireccion("");
       setFechaNacimiento("");
       setTelefono("");
       setDni("");
-      setTelefono("");
-      setEmail("")
+      setEmail("");
+      setActividadId("");
+      setMontoPago(3500);
     } catch (error) {
       console.log(error);
+      Toast.fire({
+        icon: "error",
+        title: "Error al agregar el usuario",
+      });
     }
   };
 
@@ -128,7 +153,6 @@ const AddSocioForm = ({ onAddSocio }) => {
             onChange={(e) => setActividadId(e.target.value)}
           >
             <option value="">Seleccione una actividad</option>
-            {/* Aquí deberías mapear las actividades desde tu base de datos */}
             {actividades.map((actividad) => (
               <option key={actividad.id} value={actividad.id}>
                 {actividad.nombre}
@@ -163,9 +187,8 @@ const AddSocioForm = ({ onAddSocio }) => {
             placeholder="Ingrese el numero de DNI"
           />
         </Form.Group>
-
         <Form.Group controlId="formNacimiento">
-          <Form.Label>fechaNacimiento</Form.Label>
+          <Form.Label>Fecha de Nacimiento</Form.Label>
           <Form.Control
             type="date"
             value={fechaNacimiento}
@@ -191,13 +214,22 @@ const AddSocioForm = ({ onAddSocio }) => {
             placeholder="Ingrese el numero de telefono"
           />
         </Form.Group>
-        <Form.Group controlId="formDireccion">
+        <Form.Group controlId="formEmail">
           <Form.Label>Email</Form.Label>
           <Form.Control
-            type="text"
+            type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Ingrese el email"
+          />
+        </Form.Group>
+        <Form.Group controlId="formMontoPago">
+          <Form.Label>Monto del Pago</Form.Label>
+          <Form.Control
+            type="number"
+            value={montoPago}
+            onChange={(e) => setMontoPago(e.target.value)}
+            placeholder="Ingrese el monto del pago"
           />
         </Form.Group>
         <Button variant="primary" type="submit" className="mt-3">

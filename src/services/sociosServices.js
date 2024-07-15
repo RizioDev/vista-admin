@@ -3,7 +3,11 @@ import { supabase } from '../config/supabaseConfig';
 // Obtener socios
 export const obtenerSocios = async (from, to) => {
   try {
-    let { data, error } = await supabase.from("socios").select("*").range(from, to);
+    let { data, error } = await supabase
+      .from("socios")
+      .select("*")
+      .range(from, to)
+      .order('id', { ascending: true });
     if (error) throw error;
     return data;
   } catch (error) {
@@ -117,11 +121,15 @@ export const addSocio = async (socio, actividadId) => {
 // Actualizar socio
 export const updateSocio = async (socioId, socio) => {
   try {
-    let { data, error } = await supabase.from("socios").update(socio).eq('id', socioId).select();
+    let { data, error } = await supabase
+      .from("socios")
+      .update(socio)
+      .eq('id', socioId)
+      .select();
     if (error) throw error;
-    return data;
+    return data[0]; // Devuelve el socio actualizado
   } catch (error) {
     console.error('Error al actualizar socio:', error);
     throw error;
   }
-};
+}

@@ -18,26 +18,30 @@ const EditSocioForm = ({ socio, onSave }) => {
     obtenerActividadesDirectamente();
   }, []);
 
-  console.log('soysocio', socio.id);
+  // console.log('soysocio', socio.id);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const updatedSocio = {
-      nombre,
-      apellido,
-      dni,
-      fechaNacimiento,
-      direccion,
-      telefono,
-      email,
-    };
-    try {
-      await updateSocio(socio.id, updatedSocio);
-      onSave(socio.id);
-    } catch (error) {
-      console.log("Error al actualizar el socio:", error);
-    }
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  console.log("handleSubmit called");
+  const updatedSocio = {
+    id: socio.id, // Asegúrate de incluir el id
+    nombre,
+    apellido,
+    dni,
+    fechaNacimiento,
+    direccion,
+    telefono,
+    email,
   };
+  try {
+    const updatedData = await updateSocio(socio.id, updatedSocio);
+    console.log('act', updatedData);
+    onSave(updatedData); // Esto llamará a saveSocio en Admin.jsx
+  } catch (error) {
+    console.error("Error al actualizar el socio:", error);
+  }
+};
+
 
  
 
@@ -73,7 +77,7 @@ const EditSocioForm = ({ socio, onSave }) => {
           placeholder="Ingrese el número de DNI"
         />
       </Form.Group>
-      <Form.Group controlId="formNacimiento">
+      {/* <Form.Group controlId="formNacimiento">
         <Form.Label>Fecha de Nacimiento</Form.Label>
         <Form.Control
           type="date"
@@ -81,7 +85,7 @@ const EditSocioForm = ({ socio, onSave }) => {
           onChange={(e) => setFechaNacimiento(e.target.value)}
           placeholder="Ingrese fecha de nacimiento"
         />
-      </Form.Group>
+      </Form.Group> */}
       <Form.Group controlId="formDireccion">
         <Form.Label>Dirección</Form.Label>
         <Form.Control
