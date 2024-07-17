@@ -1,7 +1,6 @@
 // src/hooks/useSocios.js
 import { useState, useEffect } from "react";
 import {
-  obtenerSocios,
   obtenerActividades,
   obtenerSocioActividades,
   obtenerPagos,
@@ -14,9 +13,11 @@ const useSocios = () => {
   const [socioActividades, setSocioActividades] = useState([]);
   const [pagos, setPagos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [dniSearchTerm, setDniSearchTerm] = useState("");
   const [error, setError] = useState(null);
   const [totalPages, setTotalPages] = useState(0);
   const [page, setPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
   const pageSize = 10; // Número de socios por página
 
   const fetchData = async () => {
@@ -24,21 +25,40 @@ const useSocios = () => {
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
 
-         // Obtener el total de socios para calcular el número total de páginas
-         const { count } = await supabase
-         .from('socios')
-         .select('*', { count: 'exact', head: true });
+      // Modificar la consulta para incluir el término de búsqueda
+      let query = supabase
+        .from('socios')
+        .select('*')
+        .order('id', { ascending: true })
+        .range(from, to);
 
-         setTotalPages(Math.ceil(count / pageSize));
+        if (searchTerm) {
+          query = query.ilike('nombre', `%${searchTerm}%`);
+        }
+        if (dniSearchTerm) {
+          query = query.eq('dni', dniSearchTerm);
+        }
 
+      const { data: sociosData, error: sociosError } = await query;
+      if (sociosError) throw sociosError;
 
-      const [sociosData, actividadesData, socioActividadesData, pagosData] = await Promise.all([
-        obtenerSocios(from, to),
+      // Obtener el total de socios para calcular el número total de páginas
+      const { count, error: countError } = await supabase
+        .from('socios')
+        .select('*', { count: 'exact', head: true })
+        .ilike('nombre', `%${searchTerm}%`)
+        .ilike('dni', `%${searchTerm}%`)
+
+      if (countError) throw countError;
+
+      setTotalPages(Math.ceil(count / pageSize));
+      setSocios(sociosData);
+
+      const [actividadesData, socioActividadesData, pagosData] = await Promise.all([
         obtenerActividades(),
         obtenerSocioActividades(),
         obtenerPagos(),
       ]);
-      setSocios(sociosData);
       setActividades(actividadesData);
       setSocioActividades(socioActividadesData);
       setPagos(pagosData);
@@ -53,28 +73,27 @@ const useSocios = () => {
     setPage(newPage);
   };
 
-
   useEffect(() => {
     fetchData();
 
     const subscription = supabase
-    .channel('custom-all-channel')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'socios' }, (payload) => {
-      if (payload.eventType === 'UPDATE') {
-        setSocios(prevSocios => prevSocios.map(s => 
-          s.id === payload.new.id ? { ...s, ...payload.new } : s
-        ));
-      } else {
-        fetchData();
-      }
-      console.log('Cambios recibidos!', payload);
-    })
-    .subscribe();
+      .channel('custom-all-channel')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'socios' }, (payload) => {
+        if (payload.eventType === 'UPDATE') {
+          setSocios(prevSocios => prevSocios.map(s => 
+            s.id === payload.new.id ? { ...s, ...payload.new } : s
+          ));
+        } else {
+          fetchData();
+        }
+        console.log('Cambios recibidos!', payload);
+      })
+      .subscribe();
 
-  return () => {
-    subscription.unsubscribe();
-  };
-}, [page]);
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [page, searchTerm, dniSearchTerm]);
 
   const nextPage = () => setPage(page + 1);
   const prevPage = () => setPage(page - 1);
@@ -99,14 +118,39 @@ const useSocios = () => {
     return actividadesDeSocio.filter((nombre) => nombre !== null).join(", ");
   };
 
-  const getPagosSocios = (socioId) => {
-    const FechaDePagosDelSocio = pagos
-      .filter((p) => p.id_socio === socioId)
-      .map((rel) => rel.fecha_pago);
-    return FechaDePagosDelSocio.length > 0 ? FechaDePagosDelSocio.join(", ") : "No hay pago";
+  const obtenerMes = (fecha) => {
+    const meses = [
+      "enero", "febrero", "marzo", "abril", "mayo", "junio", 
+      "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+    ];
+    const [year, month, day] = fecha.split("-");
+    return `${day} de ${meses[parseInt(month) - 1]} de ${year}`;
   };
 
-  return { socios, loading, error, setSocios, getActividadesDeSocio, getPagosSocios, obtenerActividadesDirectamente, nextPage, prevPage, page, totalPages, goToPage };
+  const getPagosSocios = (socioId) => {
+    const pagosDelSocio = pagos
+      .filter((p) => p.id_socio === socioId)
+      .map((rel) => rel.fecha_pago);
+  
+    return pagosDelSocio.length > 0 ? obtenerMes(pagosDelSocio[pagosDelSocio.length - 1]) : "No hay pago";
+  };
+
+  return { 
+    socios, 
+    loading, 
+    error, 
+    setSocios, 
+    getActividadesDeSocio, 
+    getPagosSocios, 
+    obtenerActividadesDirectamente, 
+    nextPage, 
+    prevPage, 
+    page, 
+    totalPages, 
+    goToPage,
+    searchTerm,
+    setSearchTerm
+  };
 };
 
 export default useSocios;
