@@ -12,6 +12,7 @@ const EditSocioForm = ({ socio, onSave }) => {
   const [direccion, setDireccion] = useState(socio.direccion);
   const [telefono, setTelefono] = useState(socio.telefono);
   const [email, setEmail] = useState(socio.email);
+  
   const [actividadId, setActividadId] = useState("");
 
   useEffect(() => {

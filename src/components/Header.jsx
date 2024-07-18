@@ -6,8 +6,8 @@ const Header = () => {
   return (
     <Navbar bg="dark" variant="dark" expand={false}>
       <Container fluid>
-        <Navbar.Brand href="/">Claypole</Navbar.Brand>
         <Navbar.Toggle aria-controls="offcanvasNavbar" />
+        <Navbar.Brand href="/">Claypole</Navbar.Brand>
         <Navbar.Offcanvas
           id="offcanvasNavbar"
           aria-labelledby="offcanvasNavbarLabel"

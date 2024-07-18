@@ -16,6 +16,7 @@ const useSocios = () => {
   const [dniSearchTerm, setDniSearchTerm] = useState("");
   const [error, setError] = useState(null);
   const [totalPages, setTotalPages] = useState(0);
+  
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const pageSize = 10; // Número de socios por página

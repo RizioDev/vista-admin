@@ -23,6 +23,9 @@ const SociosList = ({ onDelete, onEdit, onView, setSocios, renderTrigger }) => {
   const [showModal, setShowModal] = useState(false);
   const [selectedSocio, setSelectedSocio] = useState(null);
   const [montoPago, setMontoPago] = useState("");
+  const [fechaPago, setFechaPago] = useState("");
+
+
   
   useEffect(() => {
     console.log('Socios updated:', socios);
@@ -49,6 +52,7 @@ const SociosList = ({ onDelete, onEdit, onView, setSocios, renderTrigger }) => {
     setShowModal(false);
     setSelectedSocio(null);
     setMontoPago("");
+    setFechaPago("");
   };
 
   const handleConfirmPago = async () => {
@@ -59,7 +63,7 @@ const SociosList = ({ onDelete, onEdit, onView, setSocios, renderTrigger }) => {
         .insert([
           {
             id_socio: selectedSocio.id,
-            fecha_pago: new Date().toISOString(),
+            fecha_pago: fechaPago,
             monto: parseFloat(montoPago),
           },
         ])
@@ -169,6 +173,14 @@ const SociosList = ({ onDelete, onEdit, onView, setSocios, renderTrigger }) => {
           <Modal.Title>Agregar Pago para Dar de Alta</Modal.Title>
         </Modal.Header>
         <Modal.Body>
+        <Form.Group className="mb-3">
+  <Form.Label>Fecha del Pago</Form.Label>
+  <Form.Control
+    type="date"
+    value={fechaPago}
+    onChange={(e) => setFechaPago(e.target.value)}
+  />
+</Form.Group>
           <Form.Group className="mb-3">
             <Form.Label>Monto del Pago</Form.Label>
             <Form.Control
@@ -178,6 +190,7 @@ const SociosList = ({ onDelete, onEdit, onView, setSocios, renderTrigger }) => {
               onChange={(e) => setMontoPago(e.target.value)}
             />
           </Form.Group>
+          
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleCloseModal}>
